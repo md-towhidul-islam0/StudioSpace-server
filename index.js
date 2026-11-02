@@ -27,6 +27,20 @@ app.get('/', async(req,res)=>{
     const data=await allCollectios.find().toArray();
     res.send(data);
 })
+
+app.get('/add-studio', async(req,res)=>{
+  const data=await allCollectios.find().toArray();
+  res.send(data);
+})
+
+app.post('/add-studio', async(req,res)=>{
+    const data=await allCollectios.find().toArray();
+  const result=await allCollectios.insertOne(req.body);
+  console.log(req.body);
+  res.send(result);
+})
+
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
