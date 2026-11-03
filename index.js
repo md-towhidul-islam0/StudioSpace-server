@@ -40,8 +40,14 @@ app.get('/allstudio/:category', async(req,res)=>{
 })
 app.get('/allstudio/d/:id', async(req,res)=>{
   const id=req.params.id;
+  if(!ObjectId.isValid(id)){
+    return res.status(400).send({message:'Invalid listing id'});
+  }
   const query={_id:new ObjectId(id)};
   const result=await allCollectios.findOne(query);
+  if(!result){
+    return res.status(404).send({message:'Listing not found'});
+  }
   console.log(result)
   res.send(result)
 })
@@ -79,6 +85,28 @@ app.delete('/allstudio/:id', async(req,res)=>{
   }catch(err){
     console.error('Error deleting listing:', err);
     res.status(500).send({message:'Failed to delete listing'});
+  }
+})
+
+app.patch('/allstudio/d/:id', async(req,res)=>{
+  const id=req.params.id;
+  if(!ObjectId.isValid(id)){
+    return res.status(400).send({message:'Invalid listing id'});
+  }
+  const { _id, ...updates } = req.body || {};
+  try{
+    const result=await allCollectios.updateOne(
+      {_id:new ObjectId(id)},
+      {$set: updates}
+    );
+    if(result.matchedCount===0){
+      return res.status(404).send({message:'Listing not found'});
+    }
+    console.log(`Listing ${id} updated`);
+    res.send({acknowledged:result.acknowledged, modifiedCount:result.modifiedCount});
+  }catch(err){
+    console.error('Error updating listing:', err);
+    res.status(500).send({message:'Failed to update listing'});
   }
 })
 
