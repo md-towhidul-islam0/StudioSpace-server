@@ -2,6 +2,7 @@ import express from "express";
 import { MongoClient, ObjectId } from "mongodb";
 import cors from "cors"
 import 'dotenv/config'
+import { createRemoteJWKSet, jwtVerify } from "jose";
 const app = express();
 const PORT = process.env.PORT || 5000
 app.use(cors());
@@ -23,6 +24,28 @@ const dataBase = connetedClient.db("assignment08pro")
 const allCollectios = dataBase.collection("allcollections")
 const allBooking = dataBase.collection("allBooking")
 
+
+const verifyToken = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ msg: "Unauthorize" });
+  }
+  const token = authHeader.split(" ")[1];
+  if (!token) {
+    return res.status(401).send({ msg: "Unauthorize!" });
+  }
+  const JWKS = createRemoteJWKSet(
+    new URL(`${process.env.BASE_URL}/api/auth/jwks`)
+  )
+  try{
+    const {payload}=await jwtVerify(token,JWKS);
+    next();
+  }
+  catch(error)
+  {
+    return res.status(500).send({msg:"Error"})
+  }
+}
 
 app.get('/', async (req, res) => {
   const data = await allCollectios.find().toArray();
@@ -52,7 +75,9 @@ app.get('/allstudio/d/:id', async (req, res) => {
   console.log(result)
   res.send(result)
 })
-app.get('/allstudio/e/:userEmail', async (req, res) => {
+app.get('/allstudio/e/:userEmail',
+  verifyToken,
+   async (req, res) => {
   const userEmail = req.params.userEmail;
   const query = { userEmail: userEmail };
   const result = await allCollectios.find(query).toArray();
