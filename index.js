@@ -137,6 +137,30 @@ app.post('/booking', async (req, res) => {
     });
   }
 });
+app.get('/booking/e/:userEmail', async (req, res) => {
+  const userEmail = req.params.userEmail;
+  const query = { userEmail: userEmail };
+  const result = await allBooking.find(query).toArray();
+  res.send(result)
+})
+app.delete('/booking/:id', async (req, res) => {
+  const id = req.params.id;
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).send({ message: 'Invalid listing id' });
+  }
+  const query = { _id: new ObjectId(id) };
+  try {
+    const result = await allBooking.deleteOne(query);
+    if (result.deletedCount === 0) {
+      return res.status(404).send({ message: 'Listing not found' });
+    }
+    console.log(`Listing ${id} deleted`);
+    res.send({ acknowledged: result.acknowledged, deletedCount: result.deletedCount });
+  } catch (err) {
+    console.error('Error deleting listing:', err);
+    res.status(500).send({ message: 'Failed to delete listing' });
+  }
+})
 
 
 app.listen(PORT, () => {
