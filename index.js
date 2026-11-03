@@ -45,6 +45,12 @@ app.get('/allstudio/d/:id', async(req,res)=>{
   console.log(result)
   res.send(result)
 })
+app.get('/allstudio/e/:userEmail', async(req,res)=>{
+  const userEmail=req.params.userEmail;
+  const query={userEmail:userEmail};
+  const result=await allCollectios.find(query).toArray();
+  res.send(result)
+})
 app.get('/allstudioLimit', async(req,res)=>{
   const data=await allCollectios.find().limit(6).toArray();
   res.send(data);
@@ -55,6 +61,25 @@ app.post('/add-studio', async(req,res)=>{
   const result=await allCollectios.insertOne(req.body);
   console.log(req.body);
   res.send(result);
+})
+
+app.delete('/allstudio/:id', async(req,res)=>{
+  const id=req.params.id;
+  if(!ObjectId.isValid(id)){
+    return res.status(400).send({message:'Invalid listing id'});
+  }
+  const query={_id:new ObjectId(id)};
+  try{
+    const result=await allCollectios.deleteOne(query);
+    if(result.deletedCount===0){
+      return res.status(404).send({message:'Listing not found'});
+    }
+    console.log(`Listing ${id} deleted`);
+    res.send({acknowledged:result.acknowledged, deletedCount:result.deletedCount});
+  }catch(err){
+    console.error('Error deleting listing:', err);
+    res.status(500).send({message:'Failed to delete listing'});
+  }
 })
 
 
